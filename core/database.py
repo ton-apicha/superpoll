@@ -261,7 +261,7 @@ def get_voter_logs(campaign_id):
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
-    c.execute("SELECT id, ip_address, user_agent, location_data, created_at FROM responses WHERE campaign_id = ? ORDER BY created_at DESC", (campaign_id,))
+    c.execute("SELECT id, ip_address, user_agent, location_data, demographic_data, created_at FROM responses WHERE campaign_id = ? ORDER BY created_at DESC", (campaign_id,))
     rows = c.fetchall()
     
     logs = []
@@ -271,11 +271,17 @@ def get_voter_logs(campaign_id):
             if r['location_data']: loc = json.loads(r['location_data'])
         except: pass
         
+        demo = {}
+        try:
+            if r['demographic_data']: demo = json.loads(r['demographic_data'])
+        except: pass
+        
         logs.append({
             "id": r['id'],
             "ip": r['ip_address'],
             "ua": r['user_agent'],
             "location": loc,
+            "demo": demo,
             "timestamp": r['created_at']
         })
     conn.close()

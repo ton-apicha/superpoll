@@ -215,6 +215,43 @@ def create_cross_tab_chart(question_text: str, demographic_label: str,
     return fig
 
 
+    return fig
+
+
+def create_gauge_chart(label: str, current: int, target: int) -> go.Figure:
+    """
+    Create a gauge chart for quota tracking
+    """
+    percentage = (current / target * 100) if target > 0 else 0
+    
+    fig = go.Figure(go.Indicator(
+        mode = "gauge+number",
+        value = current,
+        domain = {'x': [0, 1], 'y': [0, 1]},
+        title = {'text': f"{label}<br><span style='font-size:0.8em;color:gray'>เป้าหมาย: {target}</span>", 'font': {'size': 18}},
+        gauge = {
+            'axis': {'range': [None, target], 'tickwidth': 1},
+            'bar': {'color': "#6366f1"},
+            'bgcolor': "white",
+            'borderwidth': 2,
+            'bordercolor': "#e2e8f0",
+            'steps': [
+                {'range': [0, target * 0.5], 'color': '#fee2e2'},
+                {'range': [target * 0.5, target * 0.8], 'color': '#fef3c7'},
+                {'range': [target * 0.8, target], 'color': '#dcfce7'}
+            ],
+            'threshold': {
+                'line': {'color': "red", 'width': 4},
+                'thickness': 0.75,
+                'value': target
+            }
+        }
+    ))
+
+    fig.update_layout(height=250, margin=dict(t=50, b=20, l=30, r=30))
+    return fig
+
+
 def create_live_counter(count: int, label: str = "ผู้ตอบทั้งหมด") -> str:
     """
     Create HTML for live counter display

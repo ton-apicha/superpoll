@@ -275,14 +275,69 @@ def render_question_builder(campaign_id):
 
 def render_results(campaign_id):
     count = get_response_count(campaign_id)
+    
+    # 1. Executive Summary
+    st.markdown("## 📈 สรุปผลการปฏิบัติงาน (Executive Dashboard)")
     st.markdown(create_live_counter(count), unsafe_allow_html=True)
     
-    stats = get_vote_statistics(campaign_id)
-    if not stats['questions']: return
+    # 2. Quota Tracking (Based on Field Action Plan)
+    st.markdown("---")
+    st.markdown("### 🎯 การติดตามเป้าหมายรายอำเภอ (Quota Tracking)")
+    
+    # Targets from Action Plan
+    targets = {
+        "ทั้งหมด": 360,
+        "ตะกั่วป่า": 127,
+        "ท้ายเหมือง": 124,
+        "คุระบุรี": 72,
+        "กะปง": 37,
+        "ในเขตเทศบาล": 60,
+        "นอกเขตเทศบาล": 300
+    }
+    
+    # Get Current Stats
+    district_data = get_demographic_breakdown(campaign_id, "อำเภอ")['data']
+    area_data = get_demographic_breakdown(campaign_id, "พื้นที่")['data']
+    gen_data = get_demographic_breakdown(campaign_id, "Gen")['data']
+    gender_data = get_demographic_breakdown(campaign_id, "เพศ")['data']
+    
+    def get_count(data, val):
+        return next((d['count'] for d in data if d['value'] == val), 0)
 
-    for q in stats['questions']:
-        st.markdown(f"### {q['text']}")
-        st.plotly_chart(create_bar_chart(q['text'], q['options']), use_container_width=True)
+    # Display Gauges
+    c1, c2, c3 = st.columns(3)
+    with c1: st.plotly_chart(create_gauge_chart("ความคืบหน้ารวม", count, targets["ทั้งหมด"]), use_container_width=True)
+    with c2: st.plotly_chart(create_gauge_chart("ตะกั่วป่า", get_count(district_data, "ตะกั่วป่า"), targets["ตะกั่วป่า"]), use_container_width=True)
+    with c3: st.plotly_chart(create_gauge_chart("ท้ายเหมือง", get_count(district_data, "ท้ายเหมือง"), targets["ท้ายเหมือง"]), use_container_width=True)
+    
+    c4, c5, c6 = st.columns(3)
+    with c4: st.plotly_chart(create_gauge_chart("คุระบุรี/กะปง", get_count(district_data, "คุระบุรี") + get_count(district_data, "กะปง"), targets["คุระบุรี"] + targets["กะปง"]), use_container_width=True)
+    with c5: st.plotly_chart(create_gauge_chart("ในเขตเทศบาล", get_count(area_data, "ในเขตเทศบาล"), targets["ในเขตเทศบาล"]), use_container_width=True)
+    with c6: st.plotly_chart(create_gauge_chart("นอกเขตเทศบาล", get_count(area_data, "นอกเขตเทศบาล"), targets["นอกเขตเทศบาล"]), use_container_width=True)
+
+    # 3. Detailed Analysis Tabs
+    tab_res, tab_demo = st.tabs(["📊 ผลการสำรวจรายข้อ", "👥 การวิเคราะห์ประชากร"])
+    
+    with tab_res:
+        stats = get_vote_statistics(campaign_id)
+        if not stats['questions']:
+            st.info("ยังไม่มีข้อมูลผลการสำรวจ")
+        else:
+            for q in stats['questions']:
+                st.markdown(f"#### {q['text']}")
+                st.plotly_chart(create_bar_chart(q['text'], q['options']), use_container_width=True)
+                st.markdown("<br>", unsafe_allow_html=True)
+                
+    with tab_demo:
+        st.markdown("#### 🔍 ข้อมูลเชิงลึกประชากร (Demographic Breakdown)")
+        col_a, col_b = st.columns(2)
+        with col_a:
+            st.plotly_chart(create_demographic_bar_chart("ช่วงอายุ (Generation)", gen_data), use_container_width=True)
+        with col_b:
+            st.plotly_chart(create_demographic_bar_chart("เพศ (Gender)", gender_data), use_container_width=True)
+        
+        st.markdown("#### 🗺️ ฐานเสียงรายพื้นที่ (Area Analysis)")
+        st.plotly_chart(create_demographic_bar_chart("ประเภทพื้นที่", area_data), use_container_width=True)
 
     st.markdown("---")
     with st.expander("🚨 โซนอันตราย (Danger Zone)"):
@@ -309,12 +364,18 @@ def render_voter_logs(campaign_id):
         loc_str = f"{loc.get('city', '')} {loc.get('country', '')}" if loc else "N/A"
         isp = loc.get('isp', 'N/A') if loc else "N/A"
         
+        # Demographics from record
+        demo = l.get('demo', {})
+        
         # Simple UA parser hint
         ua = l['ua'] or "N/A"
         browser = "Chrome/Edge" if "Chrome" in ua else "Safari" if "Safari" in ua else "Mobile" if "Mobile" in ua else "Other"
         
         data.append({
             "เวลา": l['timestamp'],
+            "อำเภอ": demo.get("อำเภอ", "N/A"),
+            "พื้นที่": demo.get("พื้นที่", "N/A"),
+            "Gen": demo.get("Gen", "N/A"),
             "ไอพี (IP)": l['ip'],
             "ที่อยู่/จังหวัด": loc_str,
             "ISP/เครือข่าย": isp,

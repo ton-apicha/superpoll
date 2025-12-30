@@ -133,6 +133,26 @@ def render_voter_app(campaign_id):
     </div>
     """, unsafe_allow_html=True)
     
+    # --- DEMOGRAPHIC SECTION ---
+    with st.container():
+        st.markdown("#### 👤 ข้อมูลทั่วไป (เพื่อใช้ในการประมวลผลทางสถิติ)")
+        c1, c2 = st.columns(2)
+        dist = c1.selectbox("อำเภอที่ท่านมีสิทธิเลือกตั้ง", ["ตะกั่วป่า", "ท้ายเหมือง", "คุระบุรี", "กะปง"])
+        area = c2.selectbox("พื้นที่อยู่อาศัย", ["ในเขตเทศบาล", "นอกเขตเทศบาล"])
+        
+        c3, c4 = st.columns(2)
+        gen = c3.selectbox("ช่วงอายุ (Gen)", ["Gen Z (18-25)", "Gen Y (26-45)", "Gen X (46-60)", "Baby Boomer (60+)"])
+        gender = c4.selectbox("เพศ", ["ชาย", "หญิง", "อื่นๆ"])
+        
+        st.session_state.demo_data = {
+            "อำเภอ": dist,
+            "พื้นที่": area,
+            "Gen": gen,
+            "เพศ": gender
+        }
+    
+    st.markdown("---")
+    
     questions = get_questions(campaign_id)
     
     # Process Questions
@@ -219,7 +239,7 @@ def render_voter_app(campaign_id):
             # 3. Submit
             submit_response(
                 campaign_id, 
-                {}, 
+                st.session_state.demo_data, 
                 st.session_state.responses, 
                 ip_address=ip_addr, 
                 user_agent=user_agent,
