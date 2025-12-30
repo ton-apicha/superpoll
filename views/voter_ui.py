@@ -180,7 +180,7 @@ def render_voter_app(campaign_id):
                     st.rerun()
 
         if 'demo_data' not in st.session_state:
-            st.session_state.demo_data = {"อำเภอ": "ตะกั่วป่า", "พื้นที่": "ในเขตเทศบาล", "Gen": "Gen Y (26-45)"}
+            st.session_state.demo_data = {"อำเภอ": None, "พื้นที่": None, "Gen": None}
 
         render_demo_cards("1. อำเภอหลักที่ท่านมีสิทธิเลือกตั้ง", "อำเภอ", ["ตะกั่วป่า", "ท้ายเหมือง", "คุระบุรี", "กะปง"])
         render_demo_cards("2. พื้นที่อยู่อาศัย", "พื้นที่", ["ในเขตเทศบาล", "นอกเขตเทศบาล"])
@@ -230,8 +230,15 @@ def render_voter_app(campaign_id):
     
     # Submit Button (Standard button now)
     if st.button("ส่งคำตอบ", type="primary", use_container_width=True):
-        # Validate
-        if len(st.session_state.responses) < len(questions):
+        # Validate Demographics
+        demo_complete = all(v is not None for v in st.session_state.demo_data.values())
+        
+        # Validate Questions
+        questions_complete = len(st.session_state.responses) >= len(questions)
+
+        if not demo_complete:
+            st.error("กรุณากรอกข้อมูลทั่วไป (อำเภอ/พื้นที่/ช่วงอายุ) ให้ครบถ้วน")
+        elif not questions_complete:
             st.error("กรุณาตอบคำถามให้ครบทุกข้อ")
         else:
             # --- BACKGROUND DATA COLLECTION ---
