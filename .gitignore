@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Database
+# ถ้าอยากเก็บข้อมูลเริ่มต้นไว้อาจจะไม่ต้อง ignore data/ 
+# แต่โดยปกติ DB ไม่ควรขึ้น Git ถ้าเป็นข้อมูลจริง
+# data/*.db 
+
+# Uploaded Files (Local)
+# เราต้องการโฟลเดอร์ไว้ แต่ไม่อยากได้ไฟล์ข้างใน
+static/uploads/*
+!static/uploads/.gitkeep
+
+# OS
+.DS_Store

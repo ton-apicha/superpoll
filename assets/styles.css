@@ -1,0 +1,93 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Sarabun:wght@300;400;600&display=swap');
+
+/* GLOBAL */
+html,
+body,
+[class*="st-"] {
+    font-family: 'Sarabun', 'Inter', sans-serif !important;
+}
+
+/* HIDE STREAMLIT BRANDING */
+#MainMenu,
+footer,
+header {
+    visibility: hidden;
+}
+
+/* CARDS */
+.poll-card {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    margin-bottom: 16px;
+    border: 1px solid #e2e8f0;
+}
+
+.poll-card-dark {
+    background: #1e293b;
+    border: 1px solid #334155;
+    color: white;
+}
+
+/* VOTER BUTTONS OVERLAY HACK (Using :has() for correct Streamlit DOM targeting) */
+
+/* 1. Base Button Transition */
+.stButton button {
+    transition: all 0.2s;
+}
+
+/* 2. Target the BUTTON rendering container based on the PREVIOUS sibling container having our marker */
+
+/* ZERO-HEIGHT STRATEGY for Perfect Layout */
+
+/* 1. The Container: Takes NO space in the flow */
+[data-testid="stElementContainer"]:has(div.btn-marker-large)+[data-testid="stElementContainer"],
+[data-testid="stElementContainer"]:has(div.btn-marker-small)+[data-testid="stElementContainer"] {
+    height: 0px !important;
+    min-height: 0px !important;
+    margin: 0px !important;
+    padding: 0px !important;
+    overflow: visible !important;
+    /* Allow button to float out */
+    display: block !important;
+    z-index: 99 !important;
+}
+
+/* 2. The Button: Floats UPWARDS from the zero-point anchor */
+/* Standard Streamlit Button styling reset */
+[data-testid="stElementContainer"]:has(div.btn-marker-large)+[data-testid="stElementContainer"] button,
+[data-testid="stElementContainer"]:has(div.btn-marker-small)+[data-testid="stElementContainer"] button {
+    position: absolute !important;
+    bottom: 0px !important;
+    /* Anchor to the bottom (which is the top of next element) */
+    left: 0 !important;
+    width: 100% !important;
+    border: none !important;
+    opacity: 0 !important;
+    /* INVISIBLE */
+    z-index: 100 !important;
+    cursor: pointer !important;
+    transform: translateY(-10px) !important;
+    /* Nudge up slightly into the gap */
+}
+
+/* Specific Heights */
+/* Large Card ~ 120-130px */
+[data-testid="stElementContainer"]:has(div.btn-marker-large)+[data-testid="stElementContainer"] button {
+    height: 140px !important;
+}
+
+/* Small Card ~ 50-60px */
+[data-testid="stElementContainer"]:has(div.btn-marker-small)+[data-testid="stElementContainer"] button {
+    height: 80px !important;
+}
+
+/* ADMIN UI */
+.admin-header {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    padding: 24px;
+    border-radius: 12px;
+    color: white;
+    margin-bottom: 24px;
+}
