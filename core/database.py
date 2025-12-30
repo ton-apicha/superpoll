@@ -242,6 +242,26 @@ def get_response_count(campaign_id):
     conn.close()
     return count
 
+def reset_responses(campaign_id):
+    """Delete all responses for a specific campaign"""
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    # Delete response details first (Foreign Key relationship)
+    # Get all response IDs for this campaign
+    c.execute("SELECT id FROM responses WHERE campaign_id = ?", (campaign_id,))
+    resp_ids = [r[0] for r in c.fetchall()]
+    
+    if resp_ids:
+        # Delete details for these responses
+        placeholders = ', '.join(['?'] * len(resp_ids))
+        c.execute(f"DELETE FROM response_details WHERE response_id IN ({placeholders})", resp_ids)
+        # Delete the responses themselves
+        c.execute("DELETE FROM responses WHERE campaign_id = ?", (campaign_id,))
+    
+    conn.commit()
+    conn.close()
+    return True
+
 def export_responses_data(campaign_id):
     """Export all response data for CSV"""
     conn = sqlite3.connect(DB_PATH)

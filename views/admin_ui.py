@@ -12,7 +12,7 @@ from core.database import (
     delete_campaign, toggle_campaign_status, create_question, get_questions,
     update_question, delete_question, get_results, get_response_count,
     export_responses_data, get_vote_statistics, get_demographic_breakdown,
-    DEMOGRAPHIC_OPTIONS
+    reset_responses, DEMOGRAPHIC_OPTIONS
 )
 from core.auth import check_login, login_user, logout_user
 
@@ -283,6 +283,16 @@ def render_results(campaign_id):
     for q in stats['questions']:
         st.markdown(f"### {q['text']}")
         st.plotly_chart(create_bar_chart(q['text'], q['options']), use_container_width=True)
+
+    st.markdown("---")
+    with st.expander("🚨 โซนอันตราย (Danger Zone)"):
+        st.warning("การล้างข้อมูลจะลบผลโหวตทั้งหมดของแคมเปญนี้ และไม่สามารถย้อนกลับได้")
+        confirm = st.checkbox("ยืนยันว่าต้องการลบข้อมูลทั้งหมด")
+        if st.button("🔥 ล้างข้อมูลและเริ่มเก็บใหม่", type="primary", disabled=not confirm):
+            reset_responses(campaign_id)
+            st.toast("✅ ล้างข้อมูลเรียบร้อยแล้ว")
+            time.sleep(1)
+            st.rerun()
 
 def render_campaign_detail(campaign_id):
     camp = get_campaign(campaign_id)
