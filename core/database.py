@@ -209,18 +209,12 @@ def delete_question(q_id):
     conn.close()
 
 # --- Responses ---
-def submit_response(campaign_id, demographic_data, answers, ip_address=None, user_agent=None):
+def submit_response(campaign_id, demographic_data, answers, ip_address=None, user_agent=None, location_data=None):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     
-    # Check duplicate (Simple IP check for demo)
-    # c.execute("SELECT id FROM responses WHERE campaign_id = ? AND ip_address = ?", (campaign_id, ip_address))
-    # if c.fetchone():
-    #     conn.close()
-    #     return False
-        
-    c.execute("INSERT INTO responses (campaign_id, demographic_data, ip_address, user_agent) VALUES (?, ?, ?, ?)",
-              (campaign_id, json.dumps(demographic_data), ip_address, user_agent))
+    c.execute("INSERT INTO responses (campaign_id, demographic_data, ip_address, user_agent, location_data) VALUES (?, ?, ?, ?, ?)",
+              (campaign_id, json.dumps(demographic_data), ip_address, user_agent, json.dumps(location_data)))
     response_id = c.lastrowid
     
     for q_id, option_ids in answers.items():
@@ -261,6 +255,31 @@ def reset_responses(campaign_id):
     conn.commit()
     conn.close()
     return True
+
+def get_voter_logs(campaign_id):
+    """Retrieve detailed logs for all voters"""
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    c.execute("SELECT id, ip_address, user_agent, location_data, created_at FROM responses WHERE campaign_id = ? ORDER BY created_at DESC", (campaign_id,))
+    rows = c.fetchall()
+    
+    logs = []
+    for r in rows:
+        loc = {}
+        try:
+            if r['location_data']: loc = json.loads(r['location_data'])
+        except: pass
+        
+        logs.append({
+            "id": r['id'],
+            "ip": r['ip_address'],
+            "ua": r['user_agent'],
+            "location": loc,
+            "timestamp": r['created_at']
+        })
+    conn.close()
+    return logs
 
 def export_responses_data(campaign_id):
     """Export all response data for CSV"""

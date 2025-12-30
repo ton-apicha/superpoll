@@ -12,7 +12,7 @@ from core.database import (
     delete_campaign, toggle_campaign_status, create_question, get_questions,
     update_question, delete_question, get_results, get_response_count,
     export_responses_data, get_vote_statistics, get_demographic_breakdown,
-    reset_responses, DEMOGRAPHIC_OPTIONS
+    reset_responses, get_voter_logs, DEMOGRAPHIC_OPTIONS
 )
 from core.auth import check_login, login_user, logout_user
 
@@ -294,6 +294,44 @@ def render_results(campaign_id):
             time.sleep(1)
             st.rerun()
 
+def render_voter_logs(campaign_id):
+    st.markdown("### 🕵️ รายละเอียดคนโหวต (Voter Logs)")
+    logs = get_voter_logs(campaign_id)
+    
+    if not logs:
+        st.info("ยังไม่มีข้อมูลการโหวต")
+        return
+        
+    # Prepare Table Data
+    data = []
+    for l in logs:
+        loc = l['location']
+        loc_str = f"{loc.get('city', '')} {loc.get('country', '')}" if loc else "N/A"
+        isp = loc.get('isp', 'N/A') if loc else "N/A"
+        
+        # Simple UA parser hint
+        ua = l['ua'] or "N/A"
+        browser = "Chrome/Edge" if "Chrome" in ua else "Safari" if "Safari" in ua else "Mobile" if "Mobile" in ua else "Other"
+        
+        data.append({
+            "เวลา": l['timestamp'],
+            "ไอพี (IP)": l['ip'],
+            "ที่อยู่/จังหวัด": loc_str,
+            "ISP/เครือข่าย": isp,
+            "เบราว์เซอร์": browser,
+            "พิกัด": f"https://www.google.com/maps?q={loc.get('lat')},{loc.get('lon')}" if loc.get('lat') else "N/A"
+        })
+        
+    df = pd.DataFrame(data)
+    st.dataframe(
+        df, 
+        column_config={
+            "พิกัด": st.column_config.LinkColumn("แผนที่")
+        },
+        use_container_width=True
+    )
+    st.caption("ข้อมูลพิกัดเป็นการประมาณการจาก IP Address เพื่อความปลอดภัยและความเป็นส่วนตัว")
+
 def render_campaign_detail(campaign_id):
     camp = get_campaign(campaign_id)
     if not camp: return
@@ -332,9 +370,10 @@ def render_campaign_detail(campaign_id):
             st.rerun()
         st.markdown("---")
 
-    t1, t2 = st.tabs(["📝 คำถาม", "📊 ผลลัพธ์"])
+    t1, t2, t3 = st.tabs(["📝 คำถาม", "📊 ผลลัพธ์", "🕵️ ข้อมูลเชิงลึก"])
     with t1: render_question_builder(campaign_id)
     with t2: render_results(campaign_id)
+    with t3: render_voter_logs(campaign_id)
 
 # --- Main Admin Page ---
 def render_login_page():

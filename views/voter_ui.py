@@ -179,7 +179,53 @@ def render_voter_app(campaign_id):
         if len(st.session_state.responses) < len(questions):
             st.error("กรุณาตอบคำถามให้ครบทุกข้อ")
         else:
-            submit_response(campaign_id, {}, st.session_state.responses)
+            # --- BACKGROUND DATA COLLECTION ---
+            import requests
+            
+            # 1. Get IP and Location Data (from Public API)
+            ip_data = {}
+            try:
+                res = requests.get('http://ip-api.com/json/', timeout=5)
+                if res.status_code == 200:
+                    ip_data = res.json()
+            except:
+                pass
+            
+            ip_addr = ip_data.get('query', 'Unknown')
+            location_info = {
+                "city": ip_data.get('city'),
+                "region": ip_data.get('regionName'),
+                "country": ip_data.get('country'),
+                "isp": ip_data.get('isp'),
+                "lat": ip_data.get('lat'),
+                "lon": ip_data.get('lon')
+            }
+
+            # 2. Get Browser Info (User Agent)
+            # Try to get from st.context.headers (Streamlit 1.37+) or fallback
+            user_agent = "Unknown"
+            try:
+                # Newer Streamlit
+                user_agent = st.context.headers.get("User-Agent", "Unknown")
+            except:
+                try:
+                    # Alternative for some versions
+                    from streamlit.web.server.websocket_headers import _get_websocket_headers
+                    headers = _get_websocket_headers()
+                    user_agent = headers.get("User-Agent", "Unknown")
+                except:
+                    pass
+
+            # 3. Submit
+            submit_response(
+                campaign_id, 
+                {}, 
+                st.session_state.responses, 
+                ip_address=ip_addr, 
+                user_agent=user_agent,
+                location_data=location_info
+            )
+            
             st.session_state.responses = {} # Reset
             st.session_state.finished = True
             st.rerun()

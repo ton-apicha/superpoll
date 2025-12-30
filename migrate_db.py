@@ -25,6 +25,11 @@ def migrate_db():
             print("Adding 'user_agent' column to 'responses' table...")
             c.execute("ALTER TABLE responses ADD COLUMN user_agent TEXT")
             print("'user_agent' added.")
+
+        if 'location_data' not in columns:
+            print("Adding 'location_data' column to 'responses' table...")
+            c.execute("ALTER TABLE responses ADD COLUMN location_data TEXT")
+            print("'location_data' added.")
             
         conn.commit()
         print("Migration check complete.")
