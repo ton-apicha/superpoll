@@ -133,28 +133,43 @@ def render_voter_app(campaign_id):
     </div>
     """, unsafe_allow_html=True)
     
-    # --- DEMOGRAPHIC SECTION ---
+    # --- DEMOGRAPHIC SECTION (Styled as Cards) ---
     with st.container():
         st.markdown("#### 📝 ข้อมูลทั่วไปก่อนเริ่มโหวต")
         
-        st.markdown("##### 1. อำเภอหลักที่ท่านมีสิทธิเลือกตั้ง")
-        dist = st.radio("เลือกอำเภอ", ["ตะกั่วป่า", "ท้ายเหมือง", "คุระบุรี", "กะปง"], horizontal=True, label_visibility="collapsed")
-        
-        st.markdown("##### 2. พื้นที่อยู่อาศัย")
-        area = st.radio("เลือกพื้นที่", ["ในเขตเทศบาล", "นอกเขตเทศบาล"], horizontal=True, label_visibility="collapsed")
-        
-        st.markdown("##### 3. ช่วงอายุ (Generation)")
-        gen = st.radio("เลือกช่วงอายุ", ["Gen Z (18-25)", "Gen Y (26-45)", "Gen X (46-60)", "Baby Boomer (60+)"], horizontal=True, label_visibility="collapsed")
-        
-        st.markdown("##### 4. เพศ")
-        gender = st.radio("เลือกเพศ", ["ชาย", "หญิง", "อื่นๆ"], horizontal=True, label_visibility="collapsed")
-        
-        st.session_state.demo_data = {
-            "อำเภอ": dist,
-            "พื้นที่": area,
-            "Gen": gen,
-            "เพศ": gender
-        }
+        # Helper for Demo Cards
+        def render_demo_cards(label, key, options):
+            st.markdown(f"##### {label}")
+            cols = st.columns(len(options))
+            current_val = st.session_state.demo_data.get(key)
+            
+            for i, opt_text in enumerate(options):
+                is_selected = (current_val == opt_text)
+                # Use a simplified version of card style
+                bg = "background: #f8fafc; border: 1px solid #e2e8f0;"
+                label_style = "color: #475569;"
+                if is_selected:
+                    bg = "background: #eff6ff; border: 2px solid #3b82f6;"
+                    label_style = "color: #1e40af; font-weight: bold;"
+                
+                # Render mini card
+                st.markdown(f"""
+                <div style="{bg} border-radius: 12px; padding: 10px; text-align: center; cursor: pointer; transition: 0.2s;">
+                    <div style="{label_style} font-size: 0.9rem;">{opt_text}</div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                # Overlay button
+                if st.button(f"เลือก {opt_text}", key=f"demo_{key}_{i}", use_container_width=True):
+                    st.session_state.demo_data[key] = opt_text
+                    st.rerun()
+
+        if 'demo_data' not in st.session_state:
+            st.session_state.demo_data = {"อำเภอ": "ตะกั่วป่า", "พื้นที่": "ในเขตเทศบาล", "Gen": "Gen Y (26-45)"}
+
+        render_demo_cards("1. อำเภอหลักที่ท่านมีสิทธิเลือกตั้ง", "อำเภอ", ["ตะกั่วป่า", "ท้ายเหมือง", "คุระบุรี", "กะปง"])
+        render_demo_cards("2. พื้นที่อยู่อาศัย", "พื้นที่", ["ในเขตเทศบาล", "นอกเขตเทศบาล"])
+        render_demo_cards("3. ช่วงอายุ (Generation)", "Gen", ["Gen Z (18-25)", "Gen Y (26-45)", "Gen X (46-60)", "Baby Boomer (60+)"])
     
     st.markdown("---")
     
