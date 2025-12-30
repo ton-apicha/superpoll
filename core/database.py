@@ -180,13 +180,13 @@ def create_question(campaign_id, text, q_type='single', max_select=1, options=No
     conn.commit()
     conn.close()
 
-def update_question(q_id, text, q_type, options):
+def update_question(q_id, text, q_type, max_selections, options):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     
     # Update question info
-    c.execute("UPDATE questions SET question_text = ?, question_type = ? WHERE id = ?", 
-              (text, q_type, q_id))
+    c.execute("UPDATE questions SET question_text = ?, question_type = ?, max_selections = ? WHERE id = ?", 
+              (text, q_type, max_selections, q_id))
     
     # Re-create options (simplest way to handle edits)
     c.execute("DELETE FROM options WHERE question_id = ?", (q_id,))
@@ -207,6 +207,13 @@ def delete_question(q_id):
     c.execute("DELETE FROM questions WHERE id = ?", (q_id,))
     conn.commit()
     conn.close()
+
+def reorder_question(q_id, direction):
+    """Move question up or down by swapping positions (if position field exists)"""
+    # For now, let's keep it simple: Swap with next/prev ID 
+    # (In a real app, we'd use a 'sort_order' column, but for this scale, ID-based is tricky)
+    # Let's add 'sort_order' to the table if we want real reordering.
+    pass # I will prioritize the UI fixing for now as requested.
 
 # --- Responses ---
 def submit_response(campaign_id, demographic_data, answers, ip_address=None, user_agent=None, location_data=None):
@@ -346,7 +353,16 @@ def get_demographic_breakdown(campaign_id, field):
     counts = {}
     total = 0
     for r in rows:
-        data = json.loads(r['demographic_data'])
+        # Safety Check: handle None or empty string
+        raw_data = r['demographic_data']
+        if not raw_data:
+            data = {}
+        else:
+            try:
+                data = json.loads(raw_data)
+            except:
+                data = {}
+                
         val = data.get(field, 'Unknown')
         counts[val] = counts.get(val, 0) + 1
         total += 1

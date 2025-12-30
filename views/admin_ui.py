@@ -228,7 +228,7 @@ def render_question_builder(campaign_id):
         if q_text and len(valid_opts) >= 2:
             if st.session_state.edit_q_id:
                 # UPDATE
-                update_question(st.session_state.edit_q_id, q_text, q_type, valid_opts)
+                update_question(st.session_state.edit_q_id, q_text, q_type, max_sel if q_type=='multi' else 1, valid_opts)
                 st.session_state.edit_q_id = None
                 if 'adv_rows_count' in st.session_state: del st.session_state.adv_rows_count
                 st.toast("✅ แก้ไขเรียบร้อย")
@@ -242,36 +242,52 @@ def render_question_builder(campaign_id):
         else:
             st.error("ข้อมูลไม่ครบถ้วน (ต้องมีชื่อคำถาม และอย่างน้อย 2 ตัวเลือกที่มีข้อความ)")
                 
-    # List Questions
+    # --- 2. Question List ---
+    st.markdown("---")
+    st.markdown("### 📋 รายการคำถามปัจจุบัน")
     qs = get_questions(campaign_id)
-    if qs:
-        st.markdown("---")
-        st.markdown("#### 📋 รายการคำถามที่มี")
-        for q in qs:
+    if not qs:
+        st.info("ยังไม่มีแคมเปญคำถาม")
+    else:
+        for i, q in enumerate(qs):
+            # Highlight border if editing
+            is_editing = (st.session_state.get('edit_q_id') == q['id'])
+            card_border_color = "#3b82f6" if is_editing else "#e2e8f0"
+            
             with st.container():
-                # Highlight row if editing
-                bg = "background-color: #f0f9ff; border-radius: 8px; padding: 10px;" if q['id'] == st.session_state.edit_q_id else ""
+                st.markdown(f"""
+                <div style="border: 2px solid {card_border_color}; border-radius: 12px; padding: 16px; margin-bottom: 10px; background: white;">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div>
+                            <span style="font-weight: bold; font-size: 1.1rem; color: #1e293b;">{i+1}. {q['question_text']}</span>
+                            <span style="background: {'#3b82f6' if q['question_type'] == 'single' else '#10b981'}; color: white; padding: 2px 10px; border-radius: 20px; font-size: 0.75rem; margin-left:10px;">
+                                {q['question_type'].upper()} {f'(Max {q["max_selections"]})' if q['question_type'] == 'multi' else ''}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
                 
-                c1, c2, c3 = st.columns([6,1,1])
-                c1.markdown(f"**{q['question_text']}** <span style='color:grey; font-size:0.8em'>({q['question_type']})</span>", unsafe_allow_html=True)
+                # Inline actions
+                c1, c2, c3 = st.columns([8, 1, 1])
                 
-                # Show simple preview
-                opt_str = ", ".join([o['option_text'] for o in q['options']])
-                if len(opt_str) > 50: opt_str = opt_str[:50] + "..."
-                c1.caption(f"ตัวเลือก: {opt_str}")
+                with c1:
+                    opt_previews = []
+                    for o in q['options']:
+                        dot = f'<span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: {o.get("bg_color") or "#ddd"}; margin-right: 5px;"></span>'
+                        opt_previews.append(f"{dot}{o['option_text']}")
+                    st.caption(" | ".join(opt_previews), unsafe_allow_html=True)
 
-                if c2.button("✏️", key=f"edit_{q['id']}", help="แก้ไข"):
+                if c2.button("✏️", key=f"edit_ql_{q['id']}", help="แก้ไข"):
                     st.session_state.edit_q_id = q['id']
                     st.rerun()
                 
-                if c3.button("🗑️", key=f"del_{q['id']}", help="ลบ"):
+                if c3.button("🗑️", key=f"del_ql_{q['id']}", help="ลบ"):
                     delete_question(q['id'])
-                    # If deleted the one being edited, clear state
-                    if st.session_state.edit_q_id == q['id']:
-                        st.session_state.edit_q_id = None
+                    if st.session_state.get('edit_q_id') == q['id']: st.session_state.edit_q_id = None
                     st.rerun()
                 
-                st.markdown("---")
+                st.markdown("<br>", unsafe_allow_html=True)
 
 def render_results(campaign_id):
     count = get_response_count(campaign_id)
