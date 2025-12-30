@@ -137,30 +137,32 @@ def render_voter_app(campaign_id):
     with st.container():
         st.markdown("#### 📝 ข้อมูลทั่วไปก่อนเริ่มโหวต")
         
-        # Helper for Demo Cards
+        # Helper for Demo Cards (Invisible Button Overlay)
         def render_demo_cards(label, key, options):
             st.markdown(f"##### {label}")
-            cols = st.columns(len(options))
             current_val = st.session_state.demo_data.get(key)
             
             for i, opt_text in enumerate(options):
                 is_selected = (current_val == opt_text)
-                # Use a simplified version of card style
+                # Style
                 bg = "background: #f8fafc; border: 1px solid #e2e8f0;"
                 label_style = "color: #475569;"
                 if is_selected:
                     bg = "background: #eff6ff; border: 2px solid #3b82f6;"
                     label_style = "color: #1e40af; font-weight: bold;"
                 
-                # Render mini card
+                # 1. Render Card HTML
                 st.markdown(f"""
-                <div style="{bg} border-radius: 12px; padding: 10px; text-align: center; cursor: pointer; transition: 0.2s;">
-                    <div style="{label_style} font-size: 0.9rem;">{opt_text}</div>
+                <div style="{bg} border-radius: 12px; padding: 12px; text-align: center; transition: 0.2s; min-height: 48px; display: flex; align-items: center; justify-content: center;">
+                    <div style="{label_style} font-size: 1rem;">{opt_text}</div>
                 </div>
                 """, unsafe_allow_html=True)
                 
-                # Overlay button
-                if st.button(f"เลือก {opt_text}", key=f"demo_{key}_{i}", use_container_width=True):
+                # 2. Marker for Overlay
+                st.markdown('<div class="btn-marker-mini"></div>', unsafe_allow_html=True)
+                
+                # 3. Invisible Button
+                if st.button(f"S_{key}_{i}", key=f"demo_{key}_{i}", use_container_width=True):
                     st.session_state.demo_data[key] = opt_text
                     st.rerun()
 

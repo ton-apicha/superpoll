@@ -83,6 +83,32 @@ header {
     height: 80px !important;
 }
 
+/* Mini Card (Demographics) ~ 40px */
+[data-testid="stElementContainer"]:has(div.btn-marker-mini)+[data-testid="stElementContainer"] button {
+    height: 60px !important;
+}
+
+[data-testid="stElementContainer"]:has(div.btn-marker-mini)+[data-testid="stElementContainer"] {
+    height: 0px !important;
+    min-height: 0px !important;
+    margin: 0px !important;
+    padding: 0px !important;
+    overflow: visible !important;
+    display: block !important;
+    z-index: 99 !important;
+}
+
+[data-testid="stElementContainer"]:has(div.btn-marker-mini)+[data-testid="stElementContainer"] button {
+    position: absolute !important;
+    bottom: 0px !important;
+    left: 0 !important;
+    width: 100% !important;
+    border: none !important;
+    opacity: 0 !important;
+    z-index: 100 !important;
+    cursor: pointer !important;
+}
+
 /* ADMIN UI */
 .admin-header {
     background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
