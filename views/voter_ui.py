@@ -137,31 +137,44 @@ def render_voter_app(campaign_id):
     with st.container():
         st.markdown("#### 📝 ข้อมูลทั่วไปก่อนเริ่มโหวต")
         
-        # Helper for Demo Cards (Invisible Button Overlay)
+        # Helper for Demo Cards (Standardized Style)
         def render_demo_cards(label, key, options):
-            st.markdown(f"##### {label}")
+            st.markdown(f"#### {label}")
             current_val = st.session_state.demo_data.get(key)
             
             for i, opt_text in enumerate(options):
                 is_selected = (current_val == opt_text)
-                # Style
-                bg = "background: #f8fafc; border: 1px solid #e2e8f0;"
-                label_style = "color: #475569;"
-                if is_selected:
-                    bg = "background: #eff6ff; border: 2px solid #3b82f6;"
-                    label_style = "color: #1e40af; font-weight: bold;"
                 
-                # 1. Render Card HTML
+                # EXACT SAME STYLE AS VOTING CARDS
+                border = "3px solid #22c55e" if is_selected else "1px solid #e2e8f0"
+                shadow = "0 10px 15px -3px rgba(0,0,0,0.1)" if is_selected else "0 1px 3px 0 rgba(0,0,0,0.1)"
+                transform = "transform: scale(1.02);" if is_selected else ""
+                
+                indicator = ""
+                if is_selected:
+                    indicator = f"""
+                    <div style="background: #22c55e; color: white; width: 24px; height: 24px; 
+                        border-radius: 50%; display: flex; align-items: center; justify-content: center;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.2); font-size: 14px;">✓</div>
+                    """
+                
+                # Render Card (Small Style)
                 st.markdown(f"""
-                <div style="{bg} border-radius: 12px; padding: 12px; text-align: center; transition: 0.2s; min-height: 48px; display: flex; align-items: center; justify-content: center;">
-                    <div style="{label_style} font-size: 1rem;">{opt_text}</div>
+                <div style="
+                    background: white; border-radius: 12px; padding: 12px 16px; margin-bottom: 0px;
+                    display: flex; align-items: center; gap: 12px; position: relative;
+                    border: {border}; box-shadow: {shadow}; {transform} transition: all 0.2s;
+                    min-height: 48px;
+                ">
+                    <div style="flex: 1; font-weight: 500; color: #334155; font-size: 1rem;">{opt_text}</div>
+                    <div style="flex-shrink: 0;">{indicator}</div>
                 </div>
                 """, unsafe_allow_html=True)
                 
-                # 2. Marker for Overlay
+                # Marker for Overlay
                 st.markdown('<div class="btn-marker-mini"></div>', unsafe_allow_html=True)
                 
-                # 3. Invisible Button
+                # Invisible Button
                 if st.button(f"S_{key}_{i}", key=f"demo_{key}_{i}", use_container_width=True):
                     st.session_state.demo_data[key] = opt_text
                     st.rerun()
